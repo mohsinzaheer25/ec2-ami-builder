@@ -5,9 +5,18 @@ terraform {
       version = "~> 3.0"
     }
   }
+
+//  backend "s3"{
+//    bucket = "replacewithbucketname"
+//    key = "ec2-ami-builder.tfstate"
+//    region = var.region
+//    dynamodb_table = "ec2-ami-builder-statefile-lock"
+//    encrypt = true
+//  }
 }
 
 # Configure the AWS Provider
 provider "aws" {
-  region = "us-east-1"
+  region = var.region
+  #profile = "${terraform.workspace}-profile"
 }
