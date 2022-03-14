@@ -37,3 +37,13 @@ variable "sns_topic_name" {
   type        = string
   description = "Name of the SNS Topic."
 }
+
+variable "launch_template_id" {
+  type        = string
+  description = "ID of Launch Template."
+}
+
+variable "targetASG" {
+  type        = string
+  description = "Name of target asg."
+}

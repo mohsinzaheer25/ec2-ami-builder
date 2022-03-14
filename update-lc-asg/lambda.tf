@@ -18,8 +18,8 @@ module "lambda" {
   }
 
   environment_variables = {
-    launch_template_id = "lt-06b85cad88c434730"
-    targetASG          = "testy-asg"
+    launch_template_id = var.launch_template_id
+    targetASG          = var.targetASG
   }
 
   tags = {
