@@ -11,7 +11,7 @@
 #}
 
 
-## We might not need below block and need only above block.
+## We might not need below block if win update sns works and need only above block.
 
 data "template_file" "sns_policy" {
   template = file("${path.module}/policies/sns_policy.json")
