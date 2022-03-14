@@ -1,6 +1,8 @@
-region                      = "us-east-1"
-role_name                   = "ec2_win_ami_builder_role"
-builder_role_iam_policy_arn = [
-  "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore",
-  "arn:aws:iam::aws:policy/EC2InstanceProfileForImageBuilderECRContainerBuilds"
-]
+region                = "us-east-1"
+parameter_store_name  = "win-ami"
+parameter_store_value = "ami-0f9a92942448ac56f"
+lambda_name           = "update-lc-and-asg-new"
+policy_name           = "lc-asg-lambda-policy"
+role_name             = "win-lc-asg-update-role"
+eventbridge_rule_name = "ami-parameter-store-rule"
+sns_topic_name        = "windows-ami-update-notification"

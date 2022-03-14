@@ -32,3 +32,7 @@ override.tf.json
 .idea/*
 
 .terraform.lock.hcl
+builds
+builds/*
+
+terraform.tfstate.d
