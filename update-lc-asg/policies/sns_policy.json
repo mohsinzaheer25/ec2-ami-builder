@@ -1,0 +1,15 @@
+{
+  "Version": "2008-10-17",
+  "Id": "eb_policy",
+  "Statement": [
+    {
+      "Sid": "AWSEvents",
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "events.amazonaws.com"
+      },
+      "Action": "sns:Publish",
+      "Resource": "arn:aws:sns:${region}:${account_id}:${topic_name}"
+    }
+  ]
+}
