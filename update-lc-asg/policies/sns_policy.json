@@ -6,7 +6,10 @@
       "Sid": "AWSEvents",
       "Effect": "Allow",
       "Principal": {
-        "Service": "events.amazonaws.com"
+        "Service": [
+          "events.amazonaws.com",
+          "lambda.amazonaws.com"
+        ]
       },
       "Action": "sns:Publish",
       "Resource": "arn:aws:sns:${region}:${account_id}:${topic_name}"

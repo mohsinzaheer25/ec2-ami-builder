@@ -15,7 +15,7 @@ module "eventbridge" {
           ],
           "detail" : {
             "name" : [
-              "win-ami"
+              var.parameter_store_name
             ],
             "operation" : [
               "Create",
