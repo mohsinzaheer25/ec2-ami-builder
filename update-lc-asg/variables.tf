@@ -8,9 +8,9 @@ variable "parameter_store_name" {
   description = "Name of Parameter Store"
 }
 
-variable "parameter_store_value" {
+variable "environment" {
   type        = string
-  description = "Value of Parameter Store"
+  description = "Deployment Environment"
 }
 
 variable "eventbridge_rule_name" {

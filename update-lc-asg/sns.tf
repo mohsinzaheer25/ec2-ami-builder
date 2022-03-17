@@ -32,7 +32,7 @@ module "sns_topic" {
   tags = {
     Name         = var.sns_topic_name
     Created_By   = "Terraform"
-    Terraform_At = "ec2-ami-builder/sns"
+    Terraform_At = "ec2-ami-builder/update-lc-asg/sns"
   }
 }
 

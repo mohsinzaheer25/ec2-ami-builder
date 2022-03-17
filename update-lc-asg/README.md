@@ -1,2 +1,3 @@
-# ec2-ami-builder
-ECE Image Builder
+# Update Launch Configuration and Auto Scaling
+
+Will add information after completing project

@@ -1,6 +1,6 @@
 region                = "us-east-1"
-parameter_store_name  = "win-ami"
-parameter_store_value = "ami-0f9a92942448ac56f"
+parameter_store_name  = "ami-update-param"
+environment           = "nonprod"
 lambda_name           = "update-lc-and-asg-new"
 policy_name           = "lc-asg-lambda-policy"
 role_name             = "win-lc-asg-update-role"

@@ -18,13 +18,15 @@ module "lambda" {
   }
 
   environment_variables = {
-    launch_template_id = var.launch_template_id
-    targetASG          = var.targetASG
+    env = var.environment
   }
+
+  destination_on_failure = module.sns_topic.sns_topic_arn
+  destination_on_success = module.sns_topic.sns_topic_arn
 
   tags = {
     Name         = var.lambda_name,
     Created_By   = "Terraform"
-    Terraform_At = "ec2-ami-builder/lambda"
+    Terraform_At = "ec2-ami-builder/update-lc-asg/lambda"
   }
 }

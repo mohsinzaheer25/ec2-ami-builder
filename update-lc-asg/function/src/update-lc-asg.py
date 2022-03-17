@@ -1,73 +1,82 @@
-import datetime
-import time
-import boto3
+import json
 import os
+
+import boto3
 
 
 def lambda_handler(event, context):
     # Create boto3 clients
-    ec2 = boto3.client("ec2")
-    ssm = boto3.client('ssm')
-    asg = boto3.client("autoscaling")
+    ec2_client = boto3.client("ec2")
+    ssm_client = boto3.client('ssm')
+    asg_client = boto3.client("autoscaling")
 
-    # Get values from Lambda environment variables.
+    # Step 1: Get SSM Parameter Store Value
 
-    # launch_template_id = "lt-06b85cad88c434730"
-    
-    launch_template_id = os.environ["launch_template_id"]
     ssm_key = event['detail']['name']
 
-    parameter = ssm.get_parameter(Name=ssm_key, WithDecryption=True)
-    ami = parameter['Parameter']['Value']
-    print(f"New AMI ID : {ami}")
+    parameter = ssm_client.get_parameter(Name=ssm_key, WithDecryption=True)
+    parameter_store_data = parameter['Parameter']['Value']
 
-    # update_current_launch_template_ami
+    if parameter_store_data == "no-value":
+        print("SSM has default no value so, we are not updating anything. Have a great day!!!")
+    else:
+        parameter_store_data = json.loads(parameter_store_data)  # Converting String into json object
 
-    response = ec2.create_launch_template_version(
-        LaunchTemplateId=launch_template_id,
-        SourceVersion="$Latest",
-        VersionDescription="Latest-AMI",
-        LaunchTemplateData={
-            "ImageId": ami
-        }
-    )
-    print(f"New launch template created with AMI {ami}")
+        ami = parameter_store_data['ami-id']
+        asg = parameter_store_data['asg-name']
 
-    # set_launch_template_default_version
+        print(f"New AMI ID : {ami}")
 
-    response = ec2.modify_launch_template(
-        LaunchTemplateId=launch_template_id,
-        DefaultVersion="$Latest"
-    )
-    print("Default launch template set to $Latest.")
+        # Step 2: Get Launch Template ID
 
-    # update_asg_config-latest_ami
+        asg_response = asg_client.describe_auto_scaling_groups(
+            AutoScalingGroupNames=[
+                asg,
+            ],
+        )
+        launch_template_id = asg_response['AutoScalingGroups'][0]['LaunchTemplate']['LaunchTemplateId']
 
-    # get object for the ASG we're going to update, filter by name of target ASG
-    # targetASG = 'testy-asg'
-    targetASG = os.environ['targetASG']
-    response = asg.describe_auto_scaling_groups(AutoScalingGroupNames=[targetASG])
-    if not response['AutoScalingGroups']:
-        return 'No such ASG'
+        # Step 3: Create New Launch Template Config Version
 
-        # get name of InstanceID in current ASG that we'll use to model new Launch Configuration after
-    sourceInstanceId = response.get('AutoScalingGroups')[0]['Instances'][0]['InstanceId']
+        response = ec2_client.create_launch_template_version(
+            LaunchTemplateId=launch_template_id,
+            SourceVersion="$Latest",
+            VersionDescription="Latest-AMI",
+            LaunchTemplateData={
+                "ImageId": ami
+            }
+        )
+        print(
+            f"New launch template created for Launch Template ID: {launch_template_id} with AMI: {ami} for Autoscaling "
+            f"group: {asg}")
 
-    # create LC using instance from target ASG as a template, only diff is the name of the new LC and new AMI
-    timestamp = time.time()
-    timestampstring = datetime.datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d  %H-%M-%S')
-    newlaunchconfigname = 'LC ' + ami + ' ' + timestampstring
-    asg.create_launch_configuration(
-        InstanceId=sourceInstanceId,
-        LaunchConfigurationName=newlaunchconfigname,
-        ImageId=ami)
+        # Step 4: Set New Launch Template Config Version as Default
 
-    # update ASG to use new LC
-    response = asg.update_auto_scaling_group(AutoScalingGroupName=targetASG,
-                                             LaunchConfigurationName=newlaunchconfigname)
+        response = ec2_client.modify_launch_template(
+            LaunchTemplateId=launch_template_id,
+            DefaultVersion="$Latest"
+        )
+        print("Default launch template set to Latest.")
 
-    print(
-        f"'Updated ASG {targetASG} with new launch configuration {newlaunchconfigname} which includes AMI {ami}.")
+        # Step 5: Rotate Nodes if its non prod.
+        environment = os.environ.get('env')
+
+        if environment == 'nonprod':
+            instance_refresh_response = asg_client.start_instance_refresh(
+                AutoScalingGroupName=asg,
+                Strategy='Rolling',
+                Preferences={
+                    'MinHealthyPercentage': 100,
+                    # Setting the minimum healthy percentage to 100 percent limits the rate of replacement to one
+                    # instance at a time.
+                    'InstanceWarmup': 300,
+                }
+            )
+
+            print(
+                f"Instance Refresh ID : {instance_refresh_response['InstanceRefreshId']} for Autoscaling group name: {asg}")
+        else:
+            print("Environment is not non prod so, skipping instance refresh.")
 
     return {
         "status": 200
